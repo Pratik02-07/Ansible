@@ -2,3 +2,10 @@ Assignment-Ansible.docx
 Terraform_ansible/terra-key-ec2
 Terraform_ansible/terra-key-ec2.pub
 Playbook/hosts
+
+Playbook/terra-key-ec2
+Playbook/terra-key-ec2.pub
+hosts
+generated_verify.pub
+terra-key-ec2
+terra-key-ec2.pub
