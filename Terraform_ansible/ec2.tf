@@ -62,7 +62,7 @@ resource "aws_instance" "my_instance" {
   depends_on = [aws_security_group.my_security_group, aws_key_pair.my_key]
 
   ami                    = var.ec2_ami_id
-  instance_type          = each.value     
+  instance_type          = each.value
   key_name               = aws_key_pair.my_key.key_name
   vpc_security_group_ids = [aws_security_group.my_security_group.id]
 
