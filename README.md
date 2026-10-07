@@ -43,8 +43,17 @@
    - [`hello.yaml`: Variables & Command Execution](#helloyaml-variables--command-execution)
    - [`deploy_nginx.yml`: End-to-End Web Server Deployment](#deploy_nginxyml-end-to-end-web-server-deployment)
    - [`install_pkg.yaml`: Batch Package Loops & Conditionals](#install_pkgyaml-batch-package-loops--conditionals)
-9. [End-to-End Workflow: Terraform + Ansible on AWS](#9-end-to-end-workflow-terraform--ansible-on-aws)
-10. [DevOps Best Practices & Troubleshooting](#10-devops-best-practices--troubleshooting)
+   - [`show_secrets.yaml`: Decrypting Vault Secrets](#show_secretsyaml-decrypting-vault-secrets)
+9. [Ansible Vault: Managing Sensitive Secrets in Git](#9-ansible-vault-managing-sensitive-secrets-in-git)
+   - [Why Ansible Vault in DevOps?](#why-ansible-vault-in-devops)
+   - [Symmetric AES-256 Encryption Under the Hood](#symmetric-aes-256-encryption-under-the-hood)
+   - [File Permissions Security (`chmod 600`)](#file-permissions-security-chmod-600)
+   - [Interactive vs Automated Password File Encryption](#interactive-vs-automated-password-file-encryption)
+   - [Vault Lifecycle Commands Dissection](#vault-lifecycle-commands-dissection)
+   - [Consuming Vault Secrets in Playbooks (`vars_files`)](#consuming-vault-secrets-in-playbooks-vars_files)
+   - [DevOps Security Best Practices for Vault](#devops-security-best-practices-for-vault)
+10. [End-to-End Workflow: Terraform + Ansible on AWS](#10-end-to-end-workflow-terraform--ansible-on-aws)
+11. [DevOps Best Practices & Troubleshooting](#11-devops-best-practices--troubleshooting)
 
 ---
 
@@ -640,11 +649,175 @@ Demonstrates iteration with `loop` and OS fact checking with `when`:
 
 ---
 
-## 9. End-to-End Workflow: Terraform + Ansible on AWS
+### [`show_secrets.yaml`](file:///e:/PRATIK/Coding/AWS-DevOps/Ansible/Playbook/show_secrets.yaml): Consuming Vault-Encrypted Secrets
+Demonstrates loading encrypted variables at runtime using `vars_files` and interpolating them into tasks:
+
+```yaml
+- name: Show Secrets
+  hosts: servers
+  become: yes
+
+  vars_files:
+    - secrets.yaml
+
+  tasks:
+    - name: Show passwords
+      debug:
+        msg: "My password is {{ password }}"
+  
+    - name: Show api
+      debug: 
+        msg: "My api key is {{ api_key }}"
+```
+
+---
+
+## 9. Ansible Vault: Managing Sensitive Secrets in Git
+
+### Why Ansible Vault in DevOps?
+In infrastructure automation, playbooks routinely interact with sensitive credentials:
+* Database root passwords
+* Third-party API tokens & cloud access keys
+* SSH private keys & TLS/SSL certificates
+
+Committing plaintext credentials to Git repositories is one of the most critical vulnerabilities in DevOps. **Ansible Vault** solves this by providing native, file-level and variable-level symmetric encryption directly within your codebase.
+
+---
+
+### Symmetric AES-256 Encryption Under the Hood
+
+When a file is encrypted using Ansible Vault, Ansible converts the plaintext YAML into ciphertext using **AES-256** (Advanced Encryption Standard with a 256-bit key):
+
+```yaml
+$ANSIBLE_VAULT;1.1;AES256
+62303264343565363462363639656235386563323463323066326338346165616465306130393138
+3965653130306261656634643662643061306363373435320a656461376231356532393531356639
+...
+```
+
+#### Header Breakdown:
+* **`$ANSIBLE_VAULT`**: Header marker identifying the file as an encrypted Ansible Vault document.
+* **`1.1`**: Vault format specification version.
+* **`AES256`**: Cryptographic cipher used to encrypt and decrypt the payload.
+
+---
+
+### File Permissions Security (`chmod 600`)
+
+Before storing vault passwords, security hardening on the Control Node is mandatory:
+
+```bash
+chmod 600 vault_password.txt
+cat vault_password.txt
+# Output: jethalal
+```
+
+#### Why `chmod 600` is Critical in Production:
+| Permission Bits | Notation | Who Can Access? | Security Implications |
+| :--- | :--- | :--- | :--- |
+| **`600`** | `rw-------` | **Owner Only** (Read & Write) | ✅ **Secure**: Only your user account can read the secret. Non-root users and other processes are blocked. |
+| **`644`** | `rw-r--r--` | Owner (RW), Group (Read), Others (Read) | ❌ **Vulnerable**: Any local user or shared shell session can read your plaintext password. |
+| **`777`** | `rwxrwxrwx` | Everyone (Full Access) | 🚨 **Critical Vulnerability**: Completely exposed. |
+
+---
+
+### Interactive vs Automated Password File Encryption
+
+#### Scenario A: Interactive Prompt (Manual / Ad-Hoc)
+```bash
+ansible-vault encrypt secrets.yaml
+# New Vault password: [ERROR]: User interrupted execution
+```
+* Ansible prompts twice for a passphrase.
+* If you interrupt execution (`Ctrl + C`), the file remains untouched in plaintext.
+* **Limitation**: Cannot be automated in non-interactive CI/CD pipelines (Jenkins, GitHub Actions, GitLab CI).
+
+#### Scenario B: Non-Interactive with Password File (Automated / DevOps Standard)
+```bash
+ansible-vault encrypt secrets.yaml --vault-password-file vault_password.txt
+# Encryption successful
+```
+
+#### Word-by-Word Command Breakdown:
+| Token / Word | Type | In-Depth Engineering Explanation |
+| :--- | :--- | :--- |
+| **`ansible-vault`** | Executable CLI Binary | The dedicated command-line utility for managing encrypted content in Ansible. |
+| **`encrypt`** | Subcommand / Action | Directs the tool to convert an unencrypted file into an AES-256 ciphertext file in-place. |
+| **`secrets.yaml`** | Target File | The YAML file containing confidential key-value pairs (e.g., `password: ...`, `api_key: ...`). |
+| **`--vault-password-file`** | CLI Flag / Option | Instructs Ansible to read the encryption/decryption key from an external file rather than an interactive prompt. |
+| **`vault_password.txt`** | File Path | The local file containing the vault password (`jethalal`). |
+
+---
+
+### Vault Lifecycle Commands Dissection
+
+| Operation | Command | Explanation |
+| :--- | :--- | :--- |
+| **View** | `ansible-vault view secrets.yaml --vault-password-file vault_password.txt` | Displays the decrypted content directly in terminal `stdout` without decrypting the file on disk. |
+| **Edit** | `ansible-vault edit secrets.yaml --vault-password-file vault_password.txt` | Opens the decrypted content in your default editor (`$EDITOR` / nano / vim). Automatically re-encrypts upon save and exit. |
+| **Decrypt** | `ansible-vault decrypt secrets.yaml --vault-password-file vault_password.txt` | Permanently restores the file back to plaintext YAML on disk. |
+| **Rekey** | `ansible-vault rekey secrets.yaml --vault-password-file vault_password.txt` | Rotates the encryption key/password to a new one without needing manual decrypt $\rightarrow$ re-encrypt. |
+| **Create** | `ansible-vault create new_secret.yaml --vault-password-file vault_password.txt` | Creates, opens in editor, and encrypts a brand-new file in a single step. |
+
+---
+
+### Consuming Vault Secrets in Playbooks (`vars_files`)
+
+In [`Playbook/show_secrets.yaml`](file:///e:/PRATIK/Coding/AWS-DevOps/Ansible/Playbook/show_secrets.yaml), the encrypted file is imported using the `vars_files` keyword:
+
+```yaml
+vars_files:
+  - secrets.yaml
+```
+
+#### Running Playbooks Containing Vault Secrets:
+
+```bash
+# 1. Interactive Passphrase Prompt:
+ansible-playbook -i ../hosts.ini show_secrets.yaml --ask-vault-pass
+
+# 2. Automated Execution using Password File:
+ansible-playbook -i ../hosts.ini show_secrets.yaml --vault-password-file vault_password.txt
+```
+
+#### Setting the Vault Password in `ansible.cfg`:
+To avoid passing `--vault-password-file` on every single command, configure it in `ansible.cfg`:
+```ini
+[defaults]
+vault_password_file = ./vault_password.txt
+```
+
+---
+
+### DevOps Security Best Practices for Vault
+
+1. **Always Ignore Password Files in Git**:
+   - The encrypted `secrets.yaml` is safe to commit and push to GitHub.
+   - The key file `vault_password.txt` **must NEVER be committed**.
+   - Verified entry in [`.gitignore`](file:///e:/PRATIK/Coding/AWS-DevOps/Ansible/.gitignore):
+     ```gitignore
+     Playbook/vault_password.txt
+     ```
+2. **Mask Sensitive Outputs with `no_log: true` in Production**:
+   - In learning, `debug: msg="{{ password }}"` is helpful for validation.
+   - In production, tasks that handle secrets should include `no_log: true` to prevent passwords from being recorded in console logs or CI/CD artifacts:
+     ```yaml
+     - name: Authenticate with private registry
+       docker_login:
+         username: "{{ registry_user }}"
+         password: "{{ registry_pass }}"
+       no_log: true  # Prevents password leakage in CI/CD terminal logs
+     ```
+3. **Use Vault IDs for Multi-Environment Projects**:
+   - Separate environments can use different keys (e.g. `--vault-id dev@prompt` vs `--vault-id prod@prod_vault.txt`).
+
+---
+
+## 10. End-to-End Workflow: Terraform + Ansible on AWS
 
 The modern DevOps pattern is: **Terraform provisions the infrastructure $\rightarrow$ Ansible configures the servers.**
 
-This repository features both sides in [`Terraform_ansible/`]:
+This repository features both sides in [`Terraform_ansible/`](file:///e:/PRATIK/Coding/AWS-DevOps/Ansible/Terraform_ansible):
 
 ```
 +---------------------+           +---------------------+           +---------------------+
@@ -671,7 +844,7 @@ chmod 400 terra-key-ec2
 ```
 
 ### Step 3: Populate Ansible Inventory
-Update [`inventory`]with the generated EC2 Public IP:
+Update [`inventory`](file:///e:/PRATIK/Coding/AWS-DevOps/Ansible/inventory) with the generated EC2 Public IP:
 ```ini
 [web]
 web1 ansible_host=34.228.xx.xx
@@ -697,15 +870,17 @@ Open `http://<ec2-public-ip>` to view the landing page:
 
 ---
 
-## 10. DevOps Best Practices & Troubleshooting
+## 11. DevOps Best Practices & Troubleshooting
 
 | Practice / Issue | Recommendation |
 | :--- | :--- |
 | **SSH Host Key Prompts** | Set `host_key_checking = False` in `ansible.cfg` for automated cloud environments. |
 | **Permissions on SSH Keys** | Always run `chmod 400 <private_key>` or `chmod 600 <private_key>`. Open permissions (`0644` or `0777`) cause SSH rejection. |
+| **Vault Key Protection** | Ensure `vault_password.txt` is chmodded to `600` and added to `.gitignore`. |
 | **Privilege Escalation** | Always specify `become: yes` on tasks modifying system files or installing packages. |
 | **Idempotent Tasks** | Prefer native modules (`apt`, `copy`, `service`, `template`) over raw `command` or `shell` modules. |
 | **Dry Run Testing** | Always run `ansible-playbook --check` before applying changes in production. |
+| **Secret Masking** | Use `no_log: true` on production tasks handling credentials. |
 | **Directory Hygiene** | Keep playbooks, roles, inventories, and templates structured cleanly in source control. |
 
 ---
