@@ -21,3 +21,4 @@
         name: "{{ item }}"
         state: present
       loop: "{{ packages_to_install }}"
+      when: ansible_facts["distribution"] == "Ubuntu"
