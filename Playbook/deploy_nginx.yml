@@ -1,19 +1,29 @@
 ---
-- name: Configure Webserver and Deploy Nginx
-  hosts: webservers
-  become: yes  # Runs tasks with sudo privileges
-  tasks:
+- name: End-to-End Web Server Deployment
+  hosts: web
+  become: yes  # Runs everything below as root (sudo)
+  
+  vars:
+    web_root: /var/www/html
 
-    - name: Ensure apt cache is up to date
+  tasks:
+    - name: Update apt package cache
       apt:
         update_cache: yes
+        cache_valid_time: 3600  # Only update if cache is older than an hour
 
     - name: Install Nginx web server
       apt:
         name: nginx
-        state: present
+        state: present  # Ensures Nginx is installed
 
-    - name: Start and enable Nginx service
+    - name: Create a custom landing page
+      copy:
+        content: "<h1>Welcome to Automated Ubuntu Infrastructure via Ansible!</h1>"
+        dest: "{{ web_root }}/index.html"
+        mode: '0644'
+
+    - name: Ensure Nginx service is started and enabled on boot
       service:
         name: nginx
         state: started

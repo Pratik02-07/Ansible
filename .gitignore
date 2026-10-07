@@ -5,7 +5,7 @@ Playbook/hosts
 
 Playbook/terra-key-ec2
 Playbook/terra-key-ec2.pub
-hosts
+
 generated_verify.pub
 terra-key-ec2
 terra-key-ec2.pub
@@ -14,3 +14,6 @@ Terraform_ansible/terraform.tfstate.backup
 Terraform_ansible/.terraform.lock.hcl
 Terraform_ansible/.terraform/providers/registry.terraform.io/hashicorp/aws/6.66.0/windows_amd64/terraform-provider-aws_v6.66.0_x5.exe
 Terraform_ansible/.terraform/providers/registry.terraform.io/hashicorp/aws/6.66.0/windows_amd64/LICENSE.txt
+Ansible-master-key
+Ansible-master-key.pub
+hosts.ini

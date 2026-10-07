@@ -1,0 +1,11 @@
+[servers]
+
+worker-node-1 ansible_host=<ip>
+worker-node-2 ansible_host=<ip>
+worker-node-1 ansible_user=ubuntu
+worker-node-2 ansible_user=ubuntu
+
+[all:vars]
+ansible_ssh_private_key_file=/home/pratik/Desktop/Ansible/Ansible-master-key
+ansible_python_interpreter=/usr/bin/python3
+ansible_hoste_key_check=false

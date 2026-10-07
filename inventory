@@ -1,2 +1,10 @@
 [web]
 web1 ansible_host=
+
+[web:vars]
+# Tell Ansible to connect as 'ubuntu' instead of 'pratik'
+ansible_user=ubuntu
+
+# Specify the path to the private key that matches the public key uploaded to AWS
+ansible_ssh_private_key_file=./terra-key-ec2
+
