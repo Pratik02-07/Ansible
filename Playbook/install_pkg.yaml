@@ -2,9 +2,22 @@
   hosts: all
   become: yes
 
-  tasks: 
-   - name: install tree
-     apt:
-        name: tree
-        state: present
+  vars:
+    packages_to_install:
+      - zip
+      - unzip
+      - jq
+      - wget
 
+  tasks:
+    - name: Print installation progress
+      debug:
+        msg: "installing {{ item }}"
+      loop: "{{ packages_to_install }}"
+      when: ansible_facts["distribution"] == "Ubuntu"
+
+    - name: Install utility packages
+      apt:
+        name: "{{ item }}"
+        state: present
+      loop: "{{ packages_to_install }}"
