@@ -16,7 +16,7 @@
   user:
     name: "{{ item }}"
     comment: pratik patil
-    group: docker
+    groups: docker
     append: true
   loop: "{{ docker_user }}"
 
@@ -27,3 +27,6 @@
 - name: show docker version
   debug:
     msg: "{{ docker_version.stdout }}"
+
+- name: show running container
+  command: docker ps
