@@ -1,0 +1,20 @@
+# install docker in amazon
+---
+# roles/docker/tasks/install_amazon.yml
+- name: Update dnf cache
+  ansible.builtin.dnf:
+    update_cache: yes
+
+- name: Install Docker Engine on Amazon Linux
+  ansible.builtin.dnf:
+    name: docker
+    state: present
+  become: true
+
+- name: Start and enable Docker service
+  ansible.builtin.systemd:
+    name: docker
+    state: started
+    enabled: yes
+  become: true
+

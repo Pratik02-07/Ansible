@@ -1,886 +1,569 @@
-# 🚀 Ansible Infrastructure Automation
+# 🚀 Ansible In One Shot — DevOps Multi-OS Infrastructure & Automation Mastery
 
 [![Ansible](https://img.shields.io/badge/Ansible-2.15+-EE0000?style=for-the-badge&logo=ansible&logoColor=white)](https://www.ansible.com/)
-[![Terraform](https://img.shields.io/badge/Terraform-1.5+-844FBA?style=for-the-badge&logo=terraform&logoColor=white)](https://www.terraform.io/)
-[![AWS](https://img.shields.io/badge/AWS-EC2-FF9900?style=for-the-badge&logo=amazon-aws&logoColor=white)](https://aws.amazon.com/)
-[![Linux](https://img.shields.io/badge/Linux-Ubuntu_22.04-FCC624?style=for-the-badge&logo=linux&logoColor=black)](https://ubuntu.com/)
+[![Terraform](https://img.shields.io/badge/Terraform-1.6+-844FBA?style=for-the-badge&logo=terraform&logoColor=white)](https://www.terraform.io/)
+[![AWS](https://img.shields.io/badge/AWS-EC2_Multi--OS-FF9900?style=for-the-badge&logo=amazon-aws&logoColor=white)](https://aws.amazon.com/)
+[![Linux](https://img.shields.io/badge/Linux-Ubuntu_|_RHEL_|_Amazon_Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black)](https://ubuntu.com/)
 [![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](#)
 
- 
-> **Repository Purpose**: An end-to-end, production-oriented learning log and reference repository documenting Ansible automation from first principles (Control Node, Managed Nodes, Agentless Architecture) to advanced Playbooks, Inventory structures, AWS EC2 provisioning via Terraform, and configuration management.
+> **DevOps Engineer Reference**: A comprehensive, production-grade learning journal and practical codebase for **Ansible Automation on AWS**.  
+> **Course Curriculum Reference**: Directly aligned with the 6 progressive modules from [TrainWithShubham's Ansible-in-One-Shot](https://github.com/TrainWithShubham/ansible-in-one-shot/tree/master/modules).  
+> **Core Concept**: Learn how Terraform provisions a multi-OS cloud cluster and automatically generates Ansible inventories, and how an Ansible **Control Node** orchestrates heterogeneous **Worker Nodes** (Ubuntu, RedHat, Amazon Linux) over AWS private networking.
 
 ---
 
 ## 📑 Table of Contents
 
-1. [Ansible Fundamentals](#1-ansible-fundamentals)
-   - [What is Ansible?](#what-is-ansible)
-   - [Core Tenets: Control Node vs. Managed Node](#core-tenets-control-node-vs-managed-node)
-   - [Why Agentless Architecture Matters](#why-agentless-architecture-matters)
-   - [The Golden Rule: Idempotency](#the-golden-rule-idempotency)
-2. [Ansible Architecture & Execution Flow](#2-ansible-architecture--execution-flow)
-   - [High-Level Architecture Diagram](#high-level-architecture-diagram)
-   - [Under the Hood: Execution Lifecycle](#under-the-hood-execution-lifecycle)
-3. [Ansible Inventory Deep Dive](#3-ansible-inventory-deep-dive)
-   - [Inventory Formats: INI vs YAML](#inventory-formats-ini-vs-yaml)
-   - [Host Grouping & Hierarchical Groups (`:children`)](#host-grouping--hierarchical-groups-children)
-   - [Assigning Host & Group Variables](#assigning-host--group-variables)
-   - [Critical Connection Variables Explained](#critical-connection-variables-explained)
-   - [Repository Inventory Walkthrough](#repository-inventory-walkthrough)
-4. [Ansible Configuration (`ansible.cfg`)](#4-ansible-configuration-ansiblecfg)
-5. [Ad-Hoc Commands: Word-by-Word Dissection](#5-ad-hoc-commands-word-by-word-dissection)
-   - [Command 1: `ansible -i hosts.ini servers -m ping`](#command-1-ansible--i-hostsini-servers--m-ping)
-   - [Command 2: `ansible -i hosts.ini servers -a "uptime"`](#command-2-ansible--i-hostsini-servers--a-uptime)
-   - [`command` Module vs `shell` Module](#command-module-vs-shell-module)
-6. [Playbooks Deep Dive](#6-playbooks-deep-dive)
-   - [Playbook Anatomy & Keywords](#playbook-anatomy--keywords)
-   - [Modules vs. Tasks](#modules-vs-tasks)
-   - [Handlers & Event-Driven Triggers (`notify`)](#handlers--event-driven-triggers-notify)
-   - [Playbook Execution Flow](#playbook-execution-flow)
-7. [Playbook CLI Execution Breakdown](#7-playbook-cli-execution-breakdown)
-   - [Command: `ansible-playbook -i ../hosts.ini hello.yaml`](#command-ansible-playbook--i-hostsini-helloyaml)
-8. [Codebase Playbooks Walkthrough](#8-codebase-playbooks-walkthrough)
-   - [`hello.yaml`: Variables & Command Execution](#helloyaml-variables--command-execution)
-   - [`deploy_nginx.yml`: End-to-End Web Server Deployment](#deploy_nginxyml-end-to-end-web-server-deployment)
-   - [`install_pkg.yaml`: Batch Package Loops & Conditionals](#install_pkgyaml-batch-package-loops--conditionals)
-   - [`show_secrets.yaml`: Decrypting Vault Secrets](#show_secretsyaml-decrypting-vault-secrets)
-9. [Ansible Vault: Managing Sensitive Secrets in Git](#9-ansible-vault-managing-sensitive-secrets-in-git)
-   - [Why Ansible Vault in DevOps?](#why-ansible-vault-in-devops)
-   - [Symmetric AES-256 Encryption Under the Hood](#symmetric-aes-256-encryption-under-the-hood)
-   - [File Permissions Security (`chmod 600`)](#file-permissions-security-chmod-600)
-   - [Interactive vs Automated Password File Encryption](#interactive-vs-automated-password-file-encryption)
-   - [Vault Lifecycle Commands Dissection](#vault-lifecycle-commands-dissection)
-   - [Consuming Vault Secrets in Playbooks (`vars_files`)](#consuming-vault-secrets-in-playbooks-vars_files)
-   - [DevOps Security Best Practices for Vault](#devops-security-best-practices-for-vault)
-10. [End-to-End Workflow: Terraform + Ansible on AWS](#10-end-to-end-workflow-terraform--ansible-on-aws)
-11. [DevOps Best Practices & Troubleshooting](#11-devops-best-practices--troubleshooting)
+1. [Architectural Overview & Visual Flow](#1-architectural-overview--visual-flow)
+   - [AWS Multi-Node VPC Topology](#aws-multi-node-vpc-topology)
+   - [The 6-Module Learning Journey (TrainWithShubham Roadmap)](#the-6-module-learning-journey-trainwithshubham-roadmap)
+   - [Codebase Repository Structure](#codebase-repository-structure)
+2. [Folder 1: `terraform_dynamic_inventory/` (Cloud Infrastructure & Inventory Generator)](#2-folder-1-terraform_dynamic_inventory-cloud-infrastructure--inventory-generator)
+3. [Folder 2: `inventories/` (The Server Address Book)](#3-folder-2-inventories-the-server-address-book)
+4. [Folder 3: `termix/` (Control Node Production Bundle & Multi-OS Roles)](#4-folder-3-termix-control-node-production-bundle--multi-os-roles)
+5. [Folder 4: `Playbook/` (The Automation Recipes Lab)](#5-folder-4-playbook-the-automation-recipes-lab)
+6. [Folder 5: `Terraform_ansible/` (Starter Single-Node EC2 Lab)](#6-folder-5-terraform_ansible-starter-single-node-ec2-lab)
+7. [Root Level Files & Configurations](#7-root-level-files--configurations)
+8. [Module-by-Module Deep Dive (TrainWithShubham Mapping)](#8-module-by-module-deep-dive-trainwithshubham-mapping)
+   - [Module 01: Basics & Ad-Hoc Commands](#module-01-basics--ad-hoc-commands)
+   - [Module 02: Variables & System Facts](#module-02-variables--system-facts)
+   - [Module 03: Templates, Handlers & State Management](#module-03-templates-handlers--state-management)
+   - [Module 04: Loops & OS Conditionals](#module-04-loops--os-conditionals)
+   - [Module 05: Enterprise Roles Architecture](#module-05-enterprise-roles-architecture)
+   - [Module 06: Ansible Vault Security & Secrets](#module-06-ansible-vault-security--secrets)
+9. [Master DevOps Command Cheat-Sheet](#9-master-devops-command-cheat-sheet)
 
 ---
 
-## 1. Ansible Fundamentals
+## 1. Architectural Overview & Visual Flow
 
-### What is Ansible?
-**Ansible** is an open-source IT automation engine that automates cloud provisioning, configuration management, application deployment, intraservice orchestration, and routine operational tasks.
+### AWS Multi-Node VPC Topology
 
-Unlike imperative scripting (like raw Bash scripts), Ansible operates **declaratively**: you describe the desired end state of your systems, and Ansible handles the operations required to reach and maintain that state.
+The infrastructure mirrors real-world enterprise architecture:
+1. Your **Laptop** connects to the **Control Node** via its **Public IP**.
+2. The **Control Node** manages **3 Worker Nodes** via internal **Private IPs** (`172.31.x.x`) inside the AWS VPC. No worker node needs a public IP for configuration management!
 
-```
-Bash (Imperative)  : "Download package -> unpack -> move files -> change config -> restart service"
-Ansible (Declarative): "Ensure package is present, ensure config matches template, ensure service is started"
-```
+```mermaid
+graph TD
+    subgraph Local_Environment ["💻 Local Environment (Your Laptop)"]
+        Laptop["Administrator Laptop"]
+    end
 
----
+    subgraph AWS_VPC ["☁️ AWS VPC (ap-south-1)"]
+        subgraph Public_Zone ["Public Subnet (Internet Accessible)"]
+            ControlNode["🖥️ Control Node (Ubuntu 24.04)<br/>Public IP: 13.233.x.x<br/>Private IP: 172.31.x.x<br/>(Runs Ansible Engine)"]
+        end
 
-### Core Tenets: Control Node vs. Managed Node
+        subgraph Private_Zone ["Private Subnet / Intra-VPC Traffic (Port 22 SSH)"]
+            WorkerUbuntu["🐧 Worker 1: Ubuntu 24.04<br/>User: ubuntu<br/>IP: 172.31.12.117"]
+            WorkerRedHat["🎩 Worker 2: RHEL 10<br/>User: ec2-user<br/>IP: 172.31.10.54"]
+            WorkerAmazon["📦 Worker 3: Amazon Linux 2023<br/>User: ec2-user<br/>IP: 172.31.13.185"]
+        end
+    end
 
-| Entity | Role | Requirements | Operating System |
-| :--- | :--- | :--- | :--- |
-| **Control Node** | The management host where Ansible is installed and executed from. Commands and playbooks originate here. | Python 3.9+, Ansible core package, OpenSSH client. | Linux (Ubuntu, RHEL, Debian), macOS, WSL on Windows. *(Native Windows cannot act as a Control Node)*. |
-| **Managed Node** | The target systems (virtual machines, bare-metal, EC2 instances, containers) being managed. | Standard SSH server (`sshd`), SFTP/SCP, Python 3.x installed. **No Ansible software installed**. | Linux, Unix, Windows (via WinRM/OpenSSH), Network devices. |
-
----
-
-### Why Agentless Architecture Matters
-
-Traditional configuration management tools (such as Puppet, Chef, or SaltStack in default mode) require a client-side agent daemon installed, running, and listening on every managed node.
-
-```
-Agent-based (Puppet/Chef) :  [Master Server] <--(Port 8140/Agent polling)--> [Agent Daemon running on Node]
-Ansible (Agentless)        :  [Control Node]  ---(Standard SSH / Port 22)---> [Managed Node (Python runtime)]
-```
-
-#### DevOps Advantages of Agentless Architecture:
-1. **Zero Agent Maintenance**: No need to patch, upgrade, or monitor background agent daemons across thousands of servers.
-2. **Reduced Attack Surface**: No additional persistent background daemon or open listening ports; uses existing, hardened OpenSSH infrastructure.
-3. **Low Resource Footprint**: Zero continuous CPU/RAM consumption on managed nodes when no task is running.
-4. **Immediate Bootstrapping**: Any clean Linux server launched on AWS, GCP, or Azure can be configured instantly if SSH and Python are present.
-
----
-
-### The Golden Rule: Idempotency
-
-> **Idempotency** means an operation can be executed multiple times without changing the result beyond the initial application.
-
-If you execute an Ansible playbook 1 time or 100 times against a server:
-- **Run 1**: Nginx is missing $\rightarrow$ Ansible installs Nginx $\rightarrow$ Status: `changed`.
-- **Run 2**: Nginx is already installed $\rightarrow$ Ansible verifies and takes no action $\rightarrow$ Status: `ok`.
-
-This guarantees drift prevention, safe continuous deployments, and predictability in production pipelines.
-
----
-
-## 2. Ansible Architecture & Execution Flow
-
-### High-Level Architecture Diagram
-
-```
-+---------------------------------------------------------------------------------+
-|                                CONTROL NODE                                     |
-|                                                                                 |
-|  +--------------------+    +---------------------+    +----------------------+  |
-|  |    ansible.cfg     |    |   Inventory File    |    |  Playbooks / YAML    |  |
-|  |  (Config defaults) |    | (hosts, hosts.ini)  |    |  (Tasks, Handlers)   |  |
-|  +---------+----------+    +----------+----------+    +----------+-----------+  |
-|            |                          |                          |              |
-|            +--------------------------+--------------------------+              |
-|                                       |                                         |
-|                                       v                                         |
-|                       +-------------------------------+                         |
-|                       |  Ansible Engine / Ansiballz   |                         |
-|                       |  (Packs modules into payload) |                         |
-|                       +---------------+---------------+                         |
-+---------------------------------------|-----------------------------------------+
-                                        |  Secure SSH (Port 22)
-                 +----------------------+----------------------+
-                 |                                             |
-                 v                                             v
-  +-----------------------------+               +-----------------------------+
-  |    MANAGED NODE 1 (EC2)     |               |    MANAGED NODE 2 (EC2)     |
-  |                             |               |                             |
-  |  1. Temp Payload extracted  |               |  1. Temp Payload extracted  |
-  |     to ~/.ansible/tmp/      |               |     to ~/.ansible/tmp/      |
-  |  2. Executed via Python     |               |  2. Executed via Python     |
-  |  3. JSON response returned  |               |  3. JSON response returned  |
-  |  4. Temp payload erased     |               |  4. Temp payload erased     |
-  +-----------------------------+               +-----------------------------+
+    Laptop -- "1. terraform apply (Provisions EC2 & Keys)" --> AWS_VPC
+    Laptop -- "2. scp -i key hosts.ini terra-key-ansible" --> ControlNode
+    Laptop -- "3. ssh -i key ubuntu@ControlNode" --> ControlNode
+    ControlNode -- "ansible -i hosts.ini workers -m ping" --> WorkerUbuntu
+    ControlNode -- "Intra-VPC SSH (Private IP)" --> WorkerRedHat
+    ControlNode -- "Intra-VPC SSH (Private IP)" --> WorkerAmazon
 ```
 
 ---
 
-### Under the Hood: Execution Lifecycle
+### The 6-Module Learning Journey (TrainWithShubham Roadmap)
 
-When you run `ansible` or `ansible-playbook`:
+This repository implements the 6 core pillars of Ansible mastery:
 
-1. **Configuration Load**: Ansible reads configuration in order: `ANSIBLE_CONFIG` env var $\rightarrow$ `./ansible.cfg` $\rightarrow$ `~/.ansible.cfg` $\rightarrow$ `/etc/ansible/ansible.cfg`.
-2. **Inventory Parsing**: Resolves target host patterns, groups, and assigns host/group variables.
-3. **SSH Connection Initialization**: Authenticates with target nodes using specified credentials or SSH private keys (`ansible_ssh_private_key_file`).
-4. **Fact Gathering (`setup` module)**: Unless disabled, gathers runtime facts about the target (OS distribution, IP addresses, CPU, memory, disk).
-5. **Ansiballz Packaging**: Ansible packages the task's module code and parameters into a self-contained Python zip payload on the Control Node.
-6. **Payload Transport**: Transports the payload over SFTP/SCP to the remote temporary directory (typically `~/.ansible/tmp/`).
-7. **Remote Execution**: Invokes the remote Python interpreter (`/usr/bin/python3`) to execute the module.
-8. **JSON Serialization & Return**: The module outputs a structured JSON response (e.g. `{"changed": true, "rc": 0}`) back to standard output over the SSH tunnel.
-9. **Ephemeral Cleanup**: Ansible cleans up the temporary files from `~/.ansible/tmp/` on the managed node.
-10. **Recap**: Aggregates output and displays colored status (`ok`, `changed`, `unreachable`, `failed`).
+```mermaid
+flowchart LR
+    M1["<b>Module 01</b><br/>Basics & Ad-Hoc<br/><i>ping, uptime, command</i>"] --> M2["<b>Module 02</b><br/>Variables & Facts<br/><i>vars, jinja2, setup</i>"]
+    M2 --> M3["<b>Module 03</b><br/>Templates & Handlers<br/><i>copy, notify, handlers</i>"]
+    M3 --> M4["<b>Module 04</b><br/>Loops & Conditions<br/><i>loop, when, os_facts</i>"]
+    M4 --> M5["<b>Module 05</b><br/>Roles<br/><i>multi-OS Docker role</i>"]
+    M5 --> M6["<b>Module 06</b><br/>Ansible Vault<br/><i>AES-256 secrets in git</i>"]
+```
 
 ---
 
-## 3. Ansible Inventory Deep Dive
+### Codebase Repository Structure
 
-An **Inventory** defines the managed nodes that Ansible automates. It maps hostnames or aliases to physical IP addresses, organizes servers into logical groups, and assigns variables.
+```
+AWS-DevOps/Ansible/
+│
+├── terraform_dynamic_inventory/  # 🛠️ Provisions 4 EC2 instances + dynamic inventory
+│   ├── ec2.tf                    # EC2 instances, security groups, key pairs
+│   ├── variables.tf              # AMIs, instance types, OS families
+│   ├── generate_inventory.tf     # Writes hosts.ini & bootstrap.ini using templatefile()
+│   ├── templates/                # Jinja-like template files (.tpl)
+│   │   ├── inventory.tpl         # Template for private IP worker inventory
+│   │   └── bootstrap.tpl         # Template for laptop-to-control bootstrap
+│   └── terra-key-ansible         # SSH private key for the cluster
+│
+├── inventories/                  # 📋 Auto-generated Ansible inventories
+│   └── dev/
+│       ├── hosts.ini             # Inventory used ON the control node
+│       └── bootstrap.ini         # Inventory used FROM laptop
+│
+├── termix/                       # 📦 Dedicated Control Node Production Bundle
+│   ├── hosts.ini                 # Cluster inventory ready for control node
+│   ├── keys/                     # SSH key directory template
+│   └── playbooks/
+│       ├── install_docker.yml    # Master playbook targeting multi-OS workers
+│       └── roles/docker/         # Modular enterprise Docker role (Ubuntu, RHEL, Amazon Linux)
+│
+├── Playbook/                     # 🧪 Standalone Playbook Experimentation Lab
+│   ├── hello.yaml                # Variables & echo
+│   ├── setup_nginx.yaml          # Nginx install, custom HTML copy, service restart
+│   ├── deploy_nginx.yml          # End-to-end Nginx deployment
+│   ├── install_pkg.yaml          # Loops (loop) & OS conditionals (when)
+│   ├── secrets.yaml              # AES-256 Vault-encrypted credentials
+│   ├── show_secrets.yaml         # Playbook demonstrating vars_files with Vault
+│   └── install_docker_with_role.yml # Role execution playbook
+│
+├── Terraform_ansible/            # 🚀 Starter single EC2 instance provisioning lab
+├── ansible.cfg                   # ⚙️ Global Ansible configuration defaults
+└── README.md                     # 📖 Master documentation
+```
 
-### Inventory Formats: INI vs YAML
+---
 
-Ansible supports both **INI** and **YAML** formats. INI is concise and standard for ad-hoc and simple setups; YAML is hierarchical.
+## 2. Folder 1: `terraform_dynamic_inventory/` (Cloud Infrastructure & Inventory Generator)
 
-#### INI Syntax:
+### 📌 What is this folder? (In Simple Words)
+Instead of manually creating EC2 instances in the AWS console and typing their IP addresses into an Ansible inventory file, this folder uses **Terraform** to:
+1. Launch **4 AWS EC2 instances** (1 Control Node + 3 Worker Nodes across Ubuntu, RHEL, and Amazon Linux).
+2. Automatically create the SSH Key Pair (`terra-key-ansible`).
+3. Automatically render and write the Ansible inventory files into [`inventories/dev/hosts.ini`]  using Terraform's `templatefile()` engine!
+
+---
+
+### 📂 File Breakdown:
+* **`ec2.tf`**: Defines the AWS Security Group (opening Port 22 SSH and Port 80 HTTP) and launches the instances using a `for_each` loop over `var.instances`.
+* **`variables.tf`**: Defines the configuration map for each machine:
+  * `control-node-ubuntu` $\rightarrow$ AMI: Ubuntu Server, SSH user: `ubuntu`
+  * `worker-ubuntu` $\rightarrow$ AMI: Ubuntu Server, SSH user: `ubuntu`
+  * `worker-redhat` $\rightarrow$ AMI: RHEL 10, SSH user: `ec2-user`
+  * `worker-amazon` $\rightarrow$ AMI: Amazon Linux 2023, SSH user: `ec2-user`
+* **`generate_inventory.tf`**: Uses `local_file` and `templatefile()` to write `hosts.ini` and `bootstrap.ini`.
+* **`templates/inventory.tpl`**: Jinja-style template mapping each server's private IP and SSH username into Ansible groups.
+
+---
+
+### 💻 Step-by-Step Commands:
+
+```bash
+# 1. Navigate to the terraform directory
+cd terraform_dynamic_inventory/
+
+# 2. Initialize Terraform (downloads AWS and Local providers)
+terraform init
+
+# 3. Preview the infrastructure plan
+terraform plan
+
+# 4. Apply and create the instances on AWS
+terraform apply -auto-approve
+
+# 5. Verify that the inventory file was generated
+ls -la ../inventories/dev/hosts.ini
+```
+
+> [!TIP]
+> **AWS vCPU Quota Note**: Standard AWS accounts have a default limit of 8 vCPUs for On-Demand instances. `t3.micro` instances have 2 vCPUs each ($4 \times 2 = 8\text{ vCPUs}$). If you hit `VcpuLimitExceeded`, switch `instance_type` to `t2.micro` (1 vCPU each) in `variables.tf`.
+
+---
+
+## 3. Folder 2: `inventories/` (The Server Address Book)
+
+### 📌 What is this folder? (In Simple Words)
+The **Inventory** is Ansible's telephone directory. Without an inventory, Ansible has no idea which machines exist, how to log into them, or which user account to use (`ubuntu` vs `ec2-user`).
+
+---
+
+### 📂 File Breakdown:
+
+#### 1. [`inventories/dev/hosts.ini`] 
+This is the **teaching inventory** designed to be executed **directly on the Control Node**:
 ```ini
-[web]
-web1.production.com ansible_host=10.0.1.50
-web2.production.com ansible_host=10.0.1.51
-
-[db]
-db1.production.com  ansible_host=10.0.2.100
-```
-
----
-
-### Host Grouping & Hierarchical Groups (`:children`)
-
-You can create parent-child group hierarchies using the `:children` suffix. This allows targeting broad environments (like `production` or `us-east`) while maintaining granular sub-groups (`web`, `db`).
-
-```ini
-# Sub-group: Web Servers
-[web]
-web1 ansible_host=54.210.10.1
-web2 ansible_host=54.210.10.2
-
-# Sub-group: Database Servers
-[db]
-db1 ansible_host=10.0.2.20
-
-# Parent Group: Production (Aggregates both web and db)
-[production:children]
-web
-db
-```
-
----
-
-### Assigning Host & Group Variables
-
-Variables can be assigned at two levels directly inside the inventory:
-
-#### 1. Host-Level Variables
-Assigned inline to a specific host on the same line:
-```ini
-worker-node-1 ansible_host=54.210.10.1 http_port=80 max_clients=200
-worker-node-2 ansible_host=54.210.10.2 http_port=8080 max_clients=500
-```
-
-#### 2. Group-Level Variables (`[<group_name>:vars]`)
-Assigned to all members belonging to that group:
-```ini
-[servers:vars]
-ansible_user=ubuntu
-deploy_env=staging
-app_version=v2.1.0
-
-# Variables applied globally across ALL hosts in inventory
+# Ansible Inventory — Auto-generated by Terraform
 [all:vars]
 ansible_python_interpreter=/usr/bin/python3
-ntp_server=pool.ntp.org
+
+[control]
+control-node-ubuntu ansible_connection=local ansible_user=ubuntu
+
+[ubuntu_workers]
+worker-ubuntu ansible_host=172.31.12.117 ansible_user=ubuntu
+
+[redhat]
+worker-redhat ansible_host=172.31.10.54 ansible_user=ec2-user
+
+[amazon]
+worker-amazon ansible_host=172.31.13.185 ansible_user=ec2-user
+
+[workers:children]
+ubuntu_workers
+redhat
+amazon
+
+[ubuntu:children]
+control
+ubuntu_workers
 ```
 
----
-
-### Critical Connection Variables Explained
-
-| Variable | Purpose | DevOps Use Case / Example |
-| :--- | :--- | :--- |
-| `ansible_host` | The actual IPv4/IPv6 address or DNS FQDN of the remote machine. | Decouples logical server name (`worker-1`) from dynamic public/private IP (`54.210.10.1`). |
-| `ansible_user` | The remote SSH username used to log in. | Cloud AMIs use specific default users: Ubuntu uses `ubuntu`, Amazon Linux uses `ec2-user`, CentOS uses `centos`. |
-| `ansible_ssh_private_key_file` | Absolute or relative path to the private SSH key file (`.pem` / RSA key). | Bypasses interactive password prompts for automated key-pair authentication. |
-| `ansible_port` | Remote SSH port. | Used if SSH has been moved off default port 22 (e.g. `ansible_port=2222`). |
-| `ansible_python_interpreter` | Explicit path to the remote Python binary. | Prevents discovery latency and ensures Ansible uses Python 3 (`/usr/bin/python3`) instead of legacy Python 2. |
-| `ansible_ssh_common_args` | Extra SSH CLI flags (ProxyJump, Bastion host). | Connecting to private EC2 instances via a Bastion / Jump Host. |
+#### Why are these groupings brilliant?
+* **`[control]`**: Uses `ansible_connection=local` so the control node can configure itself without even making an SSH connection!
+* **`[workers:children]`**: Creates an aggregated parent group containing `ubuntu_workers`, `redhat`, and `amazon`. Targeting `workers` runs tasks across all 3 operating systems simultaneously.
+* **Per-Host SSH Users**: Notice `worker-ubuntu` has `ansible_user=ubuntu` while `worker-redhat` has `ansible_user=ec2-user`. Ansible automatically swaps users depending on the host!
 
 ---
 
-### Repository Inventory Walkthrough
-
-This repository contains two inventory references:
-
-#### 1. [`inventory`] (Configured as default in `ansible.cfg`):
-```ini
-[web]
-web1 ansible_host=54.x.x.x
-
-[web:vars]
-# Tell Ansible to connect as 'ubuntu' instead of local user
-ansible_user=ubuntu
-
-# Specify the path to the private key that matches the public key uploaded to AWS
-ansible_ssh_private_key_file=./terra-key-ec2
-```
-
-#### 2. [`hosts`](file:///e:/PRATIK/Coding/AWS-DevOps/Ansible/hosts):
-```ini
-[servers]
-worker-node-1 ansible_host=54.x.x.1
-worker-node-2 ansible_host=54.x.x.2
-worker-node-1 ansible_user=ubuntu
-worker-node-2 ansible_user=ubuntu
-
-[all:vars]
-ansible_ssh_private_key_file=/home/pratik/Desktop/Ansible/Ansible-master-key
-ansible_python_interpreter=/usr/bin/python3
-```
-
----
-
-## 4. Ansible Configuration (`ansible.cfg`)
-
-The [`ansible.cfg`](file:///e:/PRATIK/Coding/AWS-DevOps/Ansible/ansible.cfg) file in the root directory customizes Ansible’s runtime behavior:
-
-```ini
-[defaults]
-inventory = ./inventory
-host_key_checking = False
-interpreter_python = auto_silent
-```
-
-### Parameter Breakdown:
-* **`inventory = ./inventory`**: Defines the default inventory path so you don't need to specify `-i ./inventory` in every command.
-* **`host_key_checking = False`**: Disables the interactive SSH prompt (`Are you sure you want to continue connecting (yes/no/[fingerprint])?`). Essential in automated CI/CD pipelines and ephemeral cloud instances.
-* **`interpreter_python = auto_silent`**: Automatically discovers the Python interpreter on the managed node and silences warning messages.
-
----
-
-## 5. Ad-Hoc Commands: Word-by-Word Dissection
-
-An **Ad-Hoc command** is a single, quick command used to perform a one-time task on one or more managed nodes without writing a playbook.
-
----
-
-### Command 1: `ansible -i hosts.ini servers -m ping`
+### 💻 Step-by-Step Commands:
 
 ```bash
-ansible -i hosts.ini servers -m ping
-```
+# 1. View your inventory graph (visual tree of groups & hosts)
+ansible-inventory -i inventories/dev/hosts.ini --graph
 
-#### Complete Anatomical Breakdown:
+# 2. Ping all worker machines simultaneously
+ansible -i inventories/dev/hosts.ini workers -m ping
 
-| Token / Word | Type | In-Depth Engineering Explanation |
-| :--- | :--- | :--- |
-| **`ansible`** | Executable Binary | The primary CLI utility for running ad-hoc commands against target hosts. |
-| **`-i`** | Flag / Option | Short for `--inventory`. Specifies the path to the inventory file containing target host definitions. *(If `ansible.cfg` has `inventory` defined, this flag is optional)*. |
-| **`hosts.ini`** | Argument | The path to the inventory file to read hosts and connection parameters from. |
-| **`servers`** | Host Pattern | The target identifier. Matches the `[servers]` group defined in the inventory file. Can also be a single hostname (`worker-node-1`), an IP, or the special keyword `all`. |
-| **`-m`** | Flag / Option | Short for `--module-name`. Instructs Ansible which built-in module to load and execute on the target hosts. |
-| **`ping`** | Module Name | The built-in Ansible `ansible.builtin.ping` module. |
-
-> [!IMPORTANT]
-> **Ansible `ping` is NOT an ICMP ping!**  
-> Traditional ICMP `ping` only verifies network layer connectivity. Ansible's `ping` module connects via **SSH**, validates user authentication and permissions, verifies the remote **Python interpreter**, executes a tiny Python test payload, and expects a JSON response of:
-> ```json
-> {
->   "changed": false,
->   "ping": "pong"
-> }
-> ```
-
----
-
-### Command 2: `ansible -i hosts.ini servers -a "uptime"`
-
-```bash
-ansible -i hosts.ini servers -a "uptime"
-```
-
-#### Complete Anatomical Breakdown:
-
-| Token / Word | Type | In-Depth Engineering Explanation |
-| :--- | :--- | :--- |
-| **`ansible`** | Executable Binary | The ad-hoc CLI tool. |
-| **`-i hosts.ini`** | Option + Arg | Points to the inventory file. |
-| **`servers`** | Host Pattern | Directs the command to all hosts in the `servers` group. |
-| **`-a`** | Flag / Option | Short for `--args` (module arguments). Passes string arguments to the module being executed. |
-| **`"uptime"`** | Argument Value | The exact Linux command passed as an argument string to be executed on the remote system. |
-
-#### 💡 The Default Module Magic:
-Notice that `-m` was omitted! When you do **not** supply `-m <module>`, Ansible defaults to:
-$$\text{Default Module} = \mathbf{command}$$
-
-Therefore, the above command is 100% equivalent to:
-```bash
-ansible -i hosts.ini servers -m command -a "uptime"
-```
-
-#### Additional Practical Linux Diagnostic Ad-Hoc Commands:
-```bash
-# Check memory consumption across all servers
-ansible -i hosts.ini servers -a "free -m"
-
-# Check disk space utilization
-ansible -i hosts.ini servers -a "df -h"
-
-# Check Linux kernel version
-ansible -i hosts.ini servers -a "uname -r"
-
-# Check Nginx service status (requires sudo privileges: -b)
-ansible -i hosts.ini servers -b -a "systemctl status nginx"
+# 3. Ping only the Ubuntu machines (Control node + Ubuntu worker)
+ansible -i inventories/dev/hosts.ini ubuntu -m ping
 ```
 
 ---
 
-### `command` Module vs `shell` Module
+## 4. Folder 3: `termix/` (Control Node Production Bundle & Multi-OS Roles)
 
-A common pitfall in DevOps is choosing between `command` and `shell`:
-
-| Feature | `command` Module (`-m command`) | `shell` Module (`-m shell`) |
-| :--- | :--- | :--- |
-| **Execution Method** | Executes binary directly (via `execve`) | Executes command through a subshell (`/bin/sh -c`) |
-| **Shell Features** | ❌ No pipes (`\|`), redirects (`>`), wildcards (`*`) | ✅ Full support for pipes, redirects, wildcards |
-| **Environment Vars** | ❌ Does not expand `$VAR` | ✅ Expands `$HOME`, `$PATH`, custom `$ENV` |
-| **Security** | More secure (immune to shell injection) | Higher risk if user inputs are unvetted |
-| **Example** | `ansible servers -a "cat /etc/os-release"` | `ansible servers -m shell -a "cat /var/log/syslog \| grep error"` |
+### 📌 What is this folder? (In Simple Words)
+`termix/` is a clean, production-ready directory package structured specifically to live on the **AWS Control Node**. It contains an enterprise-level **Ansible Role** that installs and configures Docker across **Ubuntu, RedHat, and Amazon Linux** with a single command!
 
 ---
 
-## 6. Playbooks Deep Dive
-
-A **Playbook** is a human-readable YAML document containing one or more **Plays**.
-- A **Play** maps a set of managed hosts to a list of ordered **Tasks**.
-- A **Task** invokes an Ansible **Module** with specified parameters to achieve a desired state.
+### 📂 File Breakdown & Architecture:
 
 ```
-Playbook (YAML file)
-  │
-  ├── Play 1: "Configure Web Tier" (hosts: web)
-  │     ├── Task 1: Update apt cache
-  │     ├── Task 2: Install Nginx
-  │     └── Task 3: Enable service (Notifies Handler)
-  │
-  ├── Play 2: "Configure Database Tier" (hosts: db)
-  │     ├── Task 1: Install MySQL
-  │     └── Task 2: Secure installation
-  │
-  └── Handlers: (Executed at the end if notified)
-        └── Handler: "Restart Nginx"
+termix/
+├── hosts.ini                  # Standalone cluster inventory
+├── keys/                      # Directory for the SSH private key
+│   └── terra-key-ansible.example
+└── playbooks/
+    ├── install_docker.yml     # Master playbook invoking the role
+    └── roles/
+        └── docker/            # Complete Ansible Role structure
+            ├── defaults/main.yml    # Default variable values
+            ├── handlers/main.yml    # Service restart handler
+            ├── meta/main.yml        # Role metadata & author info
+            ├── tasks/               # Modular OS tasks!
+            │   ├── main.yml         # Main entrypoint with dynamic OS include
+            │   ├── install_ubuntu.yml
+            │   ├── install_redhat.yml
+            │   └── install_amazon.yml
+            └── vars/main.yml        # Internal role variables
 ```
 
 ---
 
-### Playbook Anatomy & Keywords
-
-Here is a structural breakdown of a complete playbook with every primary keyword explained:
-
+### 🧠 How Dynamic OS Dispatching Works (`tasks/main.yml`):
+In `termix/playbooks/roles/docker/tasks/main.yml`:
 ```yaml
----
-- name: End-to-End Web Server Deployment      # 1. Play Name
-  hosts: servers                               # 2. Target Hosts
-  become: yes                                  # 3. Privilege Escalation (sudo)
-
-  vars:                                        # 4. Variables Block
-    web_port: 80
-    app_root: /var/www/html
-
-  tasks:                                       # 5. Ordered Tasks List
-    - name: Ensure Nginx is installed          # Task Description
-      apt:                                     # Module Name
-        name: nginx                            # Module Parameter
-        state: present                         # Desired State
-
-    - name: Deploy custom configuration file
-      template:
-        src: nginx.conf.j2
-        dest: /etc/nginx/nginx.conf
-      notify: Restart Nginx Service            # Trigger Handler on change
-
-  handlers:                                    # 6. Event-Driven Handlers
-    - name: Restart Nginx Service
-      service:
-        name: nginx
-        state: restarted
+- name: Include OS-specific Docker installation
+  include_tasks: "install_{{ ansible_facts['distribution'] | lower | replace(' ', '_') }}.yml"
 ```
-
-#### Detailed Keyword Explanations:
-
-1. **`name`**:
-   - A descriptive label for the play or task.
-   - Displayed in the terminal and CI/CD logs during execution. Essential for auditability and debugging.
-2. **`hosts`**:
-   - Specifies which systems from your inventory will execute this play (`servers`, `web`, `all`, or boolean patterns like `web:&staging`).
-3. **`become`**:
-   - Privilege escalation directive (`become: yes` / `become: true`).
-   - Equivalent to prefixing actions with `sudo`. Required for system-level operations like installing packages, managing services, or writing to `/etc/` and `/var/`.
-4. **`vars`**:
-   - Defines a key-value dictionary of variables scoped to the play. Promotes DRY (Don't Repeat Yourself) design.
-5. **`tasks`**:
-   - The sequential array of operations executed from top to bottom. If any task fails on a host, Ansible halts further execution for that host (unless `ignore_errors: yes` is specified).
-6. **`handlers`**:
-   - Special tasks that only run when triggered by a `notify` directive from another task that reported a **`changed`** status.
+When this task runs:
+* On Ubuntu $\rightarrow$ Loads `install_ubuntu.yml` (uses `apt` module).
+* On RHEL $\rightarrow$ Loads `install_redhat.yml` (uses `dnf` module + adds Docker CE repo).
+* On Amazon Linux $\rightarrow$ Loads `install_amazon.yml` (uses `dnf` / amazon-linux-extras).
 
 ---
 
-### Modules vs. Tasks
-
-* **Module**: A standalone, reusable script (written in Python for Linux, or PowerShell for Windows) that ships with Ansible or collections. Examples: `apt`, `yum`, `copy`, `template`, `service`, `systemd`, `user`, `git`.
-* **Task**: The specific unit of execution inside a Playbook that pairs a module with your customized inputs.
-
-```yaml
-# A Task:
-- name: Ensure Git is installed      # Task metadata
-  apt:                               # Module
-    name: git                        # Parameter 1
-    state: present                   # Parameter 2
-```
-
----
-
-### Handlers & Event-Driven Triggers (`notify`)
-
-In enterprise operations, you should never restart a service unless its configuration file actually changed. Handlers prevent unnecessary downtime:
-
-1. A task updates a configuration file using the `copy` or `template` module.
-2. If the file is **identical** $\rightarrow$ task status is `ok` $\rightarrow$ handler is **NOT** notified.
-3. If the file is **modified** $\rightarrow$ task status is `changed` $\rightarrow$ `notify` triggers the handler.
-4. Handlers run **once and only once** at the very end of the play, regardless of how many tasks notified them.
-
----
-
-### Playbook Execution Flow
-
-```
-                     ansible-playbook CLI Invoked
-                                  │
-                                  ▼
-                        Parse Inventory & Vars
-                                  │
-                                  ▼
-                      TASK [Gathering Facts]
-                   (Collects OS, IP, RAM specs)
-                                  │
-                                  ▼
-                         TASK 1: Update apt
-                   (Result: ok or changed)
-                                  │
-                                  ▼
-                         TASK 2: Install Nginx
-                   (Result: ok or changed)
-                                  │
-                                  ▼
-                      TASK 3: Deploy Config
-                   (Changed? -> Queue Handler)
-                                  │
-                                  ▼
-                         RUNNING HANDLERS
-                   (Execute "Restart Nginx")
-                                  │
-                                  ▼
-                            PLAY RECAP
-               (ok=4  changed=2  unreachable=0  failed=0)
-```
-
----
-
-## 7. Playbook CLI Execution Breakdown
-
-### Command: `ansible-playbook -i ../hosts.ini hello.yaml`
+### 💻 Step-by-Step Deployment Commands:
 
 ```bash
-ansible-playbook -i ../hosts.ini hello.yaml
-```
+# ========================================================
+# Phase 1: From Your Laptop (Transfer bundle to Control Node)
+# ========================================================
 
-#### Complete Anatomical Breakdown:
+# 1. Grab the Control Node's Public IP from Terraform
+cd terraform_dynamic_inventory/
+export CONTROL_IP=$(terraform output -raw control_node_public_ip)
+cd ..
 
-| Token / Word | Type | In-Depth Engineering Explanation |
-| :--- | :--- | :--- |
-| **`ansible-playbook`** | Executable Binary | The dedicated command-line engine designed to parse, validate, and orchestrate YAML playbooks across inventory targets. |
-| **`-i`** | Flag / Option | Short for `--inventory-file`. Tells Ansible where to locate the target node definitions. |
-| **`../hosts.ini`** | Relative Path | Points to the inventory file located one directory level up (`..`). Can also be an absolute path (e.g. `/etc/ansible/hosts`). |
-| **`hello.yaml`** | Target Playbook | The YAML playbook file containing the plays, tasks, variables, and desired states to execute. |
+# 2. Securely copy (scp) the termix folder and private key to the Control Node
+scp -i terraform_dynamic_inventory/terra-key-ansible -r termix/ ubuntu@$CONTROL_IP:/home/ubuntu/
+scp -i terraform_dynamic_inventory/terra-key-ansible terraform_dynamic_inventory/terra-key-ansible ubuntu@$CONTROL_IP:/home/ubuntu/termix/keys/
 
-#### Useful Flags for Production:
-```bash
-# 1. Syntax check before running
-ansible-playbook -i ../hosts.ini hello.yaml --syntax-check
+# 3. SSH into the Control Node
+ssh -i terraform_dynamic_inventory/terra-key-ansible ubuntu@$CONTROL_IP
 
-# 2. Dry run / Check Mode (Simulates changes without modifying target nodes)
-ansible-playbook -i ../hosts.ini hello.yaml --check
+# ========================================================
+# Phase 2: On the Control Node (Execute the Automation)
+# ========================================================
 
-# 3. Limit execution to a specific host
-ansible-playbook -i ../hosts.ini hello.yaml --limit worker-node-1
+# 4. Enter the termix directory
+cd ~/termix
 
-# 4. Verbose debugging output (-v, -vv, -vvv, or -vvvv for full SSH logs)
-ansible-playbook -i ../hosts.ini hello.yaml -vvv
-```
+# 5. Lock down SSH key permissions (mandatory for SSH)
+chmod 400 keys/terra-key-ansible
 
----
+# 6. Test connectivity across all workers
+ansible -i hosts.ini workers -m ping
 
-## 8. Codebase Playbooks Walkthrough
-
-This repository contains ready-to-run playbooks in [`Playbook/`]:
-
-### [`hello.yaml`]: Variables & Command Execution
-A foundational playbook demonstrating variable interpolation using Jinja2 syntax `{{ ... }}`:
-
-```yaml
-- name: hello friends
-  hosts: servers
-  become: yes
-
-  vars:
-    user_name: Pratik
-
-  tasks:
-    - name: Greet Users
-      command: echo "hello {{ user_name }}"
+# 7. Execute the multi-OS Docker installation role across all servers!
+ansible-playbook -i hosts.ini playbooks/install_docker.yml
 ```
 
 ---
 
-### [`deploy_nginx.yml`]: End-to-End Web Server Deployment
-A production deployment playbook showcasing package cache management, package installation, file creation, and service management:
+## 5. Folder 4: `Playbook/` (The Automation Recipes Lab)
 
-```yaml
----
-- name: End-to-End Web Server Deployment
-  hosts: web
-  become: yes  # Runs everything below as root (sudo)
-  
-  vars:
-    web_root: /var/www/html
-
-  tasks:
-    - name: Update apt package cache
-      apt:
-        update_cache: yes
-        cache_valid_time: 3600  # Only update if cache is older than an hour
-
-    - name: Install Nginx web server
-      apt:
-        name: nginx
-        state: present  # Ensures Nginx is installed
-
-    - name: Create a custom landing page
-      copy:
-        content: "<h1>Welcome to Automated Ubuntu Infrastructure via Ansible!</h1>"
-        dest: "{{ web_root }}/index.html"
-        mode: '0644'
-
-    - name: Ensure Nginx service is started and enabled on boot
-      service:
-        name: nginx
-        state: started
-        enabled: yes
-```
+### 📌 What is this folder? (In Simple Words)
+A collection of bite-sized, practical playbooks designed to test and understand each Ansible concept individually (variables, web server deployments, loops, conditionals, and encrypted secrets).
 
 ---
 
-### [`install_pkg.yaml`]: Batch Package Loops & Conditionals
-Demonstrates iteration with `loop` and OS fact checking with `when`:
+### 📂 Playbook Catalog:
 
-```yaml
-- name: Install Packages
-  hosts: all
-  become: yes
+#### 1. `Playbook/hello.yaml` — *Variables & Echo*
+* **Concept**: Demonstrates Jinja2 variable interpolation `{{ user_name }}`.
+* **Command**:
+  ```bash
+  ansible-playbook -i ../hosts.ini Playbook/hello.yaml
+  ```
 
-  vars:
-    packages_to_install:
-      - zip
-      - unzip
-      - jq
-      - wget
+#### 2. `Playbook/setup_nginx.yaml` & `deploy_nginx.yml` — *Web Server Deployment*
+* **Concept**: Updates `apt` cache, installs Nginx, copies a custom `index.html` landing page with `mode: '0644'`, and ensures the service is enabled on boot.
+* **Command**:
+  ```bash
+  ansible-playbook -i ../hosts.ini Playbook/setup_nginx.yaml
+  ```
 
-  tasks:
-    - name: Print installation progress
-      debug:
-        msg: "installing {{ item }}"
-      loop: "{{ packages_to_install }}"
-      when: ansible_facts["distribution"] == "Ubuntu"
+#### 3. `Playbook/install_pkg.yaml` — *Loops & Conditionals*
+* **Concept**: Demonstrates `loop: "{{ packages_to_install }}"` iterating through `[zip, unzip, jq, wget]` and conditional execution with `when: ansible_facts["distribution"] == "Ubuntu"`.
+* **Command**:
+  ```bash
+  ansible-playbook -i ../hosts.ini Playbook/install_pkg.yaml
+  ```
 
-    - name: Install utility packages
-      apt:
-        name: "{{ item }}"
-        state: present
-      loop: "{{ packages_to_install }}"
-```
-
----
-
-### [`show_secrets.yaml`](file:///e:/PRATIK/Coding/AWS-DevOps/Ansible/Playbook/show_secrets.yaml): Consuming Vault-Encrypted Secrets
-Demonstrates loading encrypted variables at runtime using `vars_files` and interpolating them into tasks:
-
-```yaml
-- name: Show Secrets
-  hosts: servers
-  become: yes
-
-  vars_files:
-    - secrets.yaml
-
-  tasks:
-    - name: Show passwords
-      debug:
-        msg: "My password is {{ password }}"
-  
-    - name: Show api
-      debug: 
-        msg: "My api key is {{ api_key }}"
-```
+#### 4. `Playbook/secrets.yaml` & `show_secrets.yaml` — *Ansible Vault*
+* **Concept**: Encrypts sensitive API tokens and passwords with AES-256 and imports them at runtime using `vars_files: - secrets.yaml`.
+* **Command**:
+  ```bash
+  # Run using automated password file:
+  ansible-playbook -i ../hosts.ini Playbook/show_secrets.yaml --vault-password-file Playbook/vault_password.txt
+  ```
 
 ---
 
-## 9. Ansible Vault: Managing Sensitive Secrets in Git
+## 6. Folder 5: `Terraform_ansible/` (Starter Single-Node EC2 Lab)
 
-### Why Ansible Vault in DevOps?
-In infrastructure automation, playbooks routinely interact with sensitive credentials:
-* Database root passwords
-* Third-party API tokens & cloud access keys
-* SSH private keys & TLS/SSL certificates
+### 📌 What is this folder? (In Simple Words)
+The starting point of the project. A lightweight Terraform setup that provisions a single AWS EC2 instance, creates the `terra-key-ec2` key pair, and exports output variables (Public IP, Instance ID, Private IP). Used for quick single-machine tests before moving to multi-OS clusters.
 
-Committing plaintext credentials to Git repositories is one of the most critical vulnerabilities in DevOps. **Ansible Vault** solves this by providing native, file-level and variable-level symmetric encryption directly within your codebase.
-
----
-
-### Symmetric AES-256 Encryption Under the Hood
-
-When a file is encrypted using Ansible Vault, Ansible converts the plaintext YAML into ciphertext using **AES-256** (Advanced Encryption Standard with a 256-bit key):
-
-```yaml
-$ANSIBLE_VAULT;1.1;AES256
-62303264343565363462363639656235386563323463323066326338346165616465306130393138
-3965653130306261656634643662643061306363373435320a656461376231356532393531356639
-...
-```
-
-#### Header Breakdown:
-* **`$ANSIBLE_VAULT`**: Header marker identifying the file as an encrypted Ansible Vault document.
-* **`1.1`**: Vault format specification version.
-* **`AES256`**: Cryptographic cipher used to encrypt and decrypt the payload.
-
----
-
-### File Permissions Security (`chmod 600`)
-
-Before storing vault passwords, security hardening on the Control Node is mandatory:
-
-```bash
-chmod 600 vault_password.txt
-cat vault_password.txt
-# Output: jethalal
-```
-
-#### Why `chmod 600` is Critical in Production:
-| Permission Bits | Notation | Who Can Access? | Security Implications |
-| :--- | :--- | :--- | :--- |
-| **`600`** | `rw-------` | **Owner Only** (Read & Write) | ✅ **Secure**: Only your user account can read the secret. Non-root users and other processes are blocked. |
-| **`644`** | `rw-r--r--` | Owner (RW), Group (Read), Others (Read) | ❌ **Vulnerable**: Any local user or shared shell session can read your plaintext password. |
-| **`777`** | `rwxrwxrwx` | Everyone (Full Access) | 🚨 **Critical Vulnerability**: Completely exposed. |
-
----
-
-### Interactive vs Automated Password File Encryption
-
-#### Scenario A: Interactive Prompt (Manual / Ad-Hoc)
-```bash
-ansible-vault encrypt secrets.yaml
-# New Vault password: [ERROR]: User interrupted execution
-```
-* Ansible prompts twice for a passphrase.
-* If you interrupt execution (`Ctrl + C`), the file remains untouched in plaintext.
-* **Limitation**: Cannot be automated in non-interactive CI/CD pipelines (Jenkins, GitHub Actions, GitLab CI).
-
-#### Scenario B: Non-Interactive with Password File (Automated / DevOps Standard)
-```bash
-ansible-vault encrypt secrets.yaml --vault-password-file vault_password.txt
-# Encryption successful
-```
-
-#### Word-by-Word Command Breakdown:
-| Token / Word | Type | In-Depth Engineering Explanation |
-| :--- | :--- | :--- |
-| **`ansible-vault`** | Executable CLI Binary | The dedicated command-line utility for managing encrypted content in Ansible. |
-| **`encrypt`** | Subcommand / Action | Directs the tool to convert an unencrypted file into an AES-256 ciphertext file in-place. |
-| **`secrets.yaml`** | Target File | The YAML file containing confidential key-value pairs (e.g., `password: ...`, `api_key: ...`). |
-| **`--vault-password-file`** | CLI Flag / Option | Instructs Ansible to read the encryption/decryption key from an external file rather than an interactive prompt. |
-| **`vault_password.txt`** | File Path | The local file containing the vault password (`jethalal`). |
-
----
-
-### Vault Lifecycle Commands Dissection
-
-| Operation | Command | Explanation |
-| :--- | :--- | :--- |
-| **View** | `ansible-vault view secrets.yaml --vault-password-file vault_password.txt` | Displays the decrypted content directly in terminal `stdout` without decrypting the file on disk. |
-| **Edit** | `ansible-vault edit secrets.yaml --vault-password-file vault_password.txt` | Opens the decrypted content in your default editor (`$EDITOR` / nano / vim). Automatically re-encrypts upon save and exit. |
-| **Decrypt** | `ansible-vault decrypt secrets.yaml --vault-password-file vault_password.txt` | Permanently restores the file back to plaintext YAML on disk. |
-| **Rekey** | `ansible-vault rekey secrets.yaml --vault-password-file vault_password.txt` | Rotates the encryption key/password to a new one without needing manual decrypt $\rightarrow$ re-encrypt. |
-| **Create** | `ansible-vault create new_secret.yaml --vault-password-file vault_password.txt` | Creates, opens in editor, and encrypts a brand-new file in a single step. |
-
----
-
-### Consuming Vault Secrets in Playbooks (`vars_files`)
-
-In [`Playbook/show_secrets.yaml`](file:///e:/PRATIK/Coding/AWS-DevOps/Ansible/Playbook/show_secrets.yaml), the encrypted file is imported using the `vars_files` keyword:
-
-```yaml
-vars_files:
-  - secrets.yaml
-```
-
-#### Running Playbooks Containing Vault Secrets:
-
-```bash
-# 1. Interactive Passphrase Prompt:
-ansible-playbook -i ../hosts.ini show_secrets.yaml --ask-vault-pass
-
-# 2. Automated Execution using Password File:
-ansible-playbook -i ../hosts.ini show_secrets.yaml --vault-password-file vault_password.txt
-```
-
-#### Setting the Vault Password in `ansible.cfg`:
-To avoid passing `--vault-password-file` on every single command, configure it in `ansible.cfg`:
-```ini
-[defaults]
-vault_password_file = ./vault_password.txt
-```
-
----
-
-### DevOps Security Best Practices for Vault
-
-1. **Always Ignore Password Files in Git**:
-   - The encrypted `secrets.yaml` is safe to commit and push to GitHub.
-   - The key file `vault_password.txt` **must NEVER be committed**.
-   - Verified entry in [`.gitignore`](file:///e:/PRATIK/Coding/AWS-DevOps/Ansible/.gitignore):
-     ```gitignore
-     Playbook/vault_password.txt
-     ```
-2. **Mask Sensitive Outputs with `no_log: true` in Production**:
-   - In learning, `debug: msg="{{ password }}"` is helpful for validation.
-   - In production, tasks that handle secrets should include `no_log: true` to prevent passwords from being recorded in console logs or CI/CD artifacts:
-     ```yaml
-     - name: Authenticate with private registry
-       docker_login:
-         username: "{{ registry_user }}"
-         password: "{{ registry_pass }}"
-       no_log: true  # Prevents password leakage in CI/CD terminal logs
-     ```
-3. **Use Vault IDs for Multi-Environment Projects**:
-   - Separate environments can use different keys (e.g. `--vault-id dev@prompt` vs `--vault-id prod@prod_vault.txt`).
-
----
-
-## 10. End-to-End Workflow: Terraform + Ansible on AWS
-
-The modern DevOps pattern is: **Terraform provisions the infrastructure $\rightarrow$ Ansible configures the servers.**
-
-This repository features both sides in [`Terraform_ansible/`](file:///e:/PRATIK/Coding/AWS-DevOps/Ansible/Terraform_ansible):
-
-```
-+---------------------+           +---------------------+           +---------------------+
-| 1. Terraform        |  Public   | 2. Ansible          |    SSH    | 3. EC2 Instances    |
-| Provisions EC2,     |  IPs &    | Reads Inventory,    | Configures| Configured with     |
-| Security Groups,    | --------> | connects with       | --------> | Nginx, Security,    |
-| & SSH Key Pairs     | Key Path  | terra-key-ec2       |           | Packages            |
-+---------------------+           +---------------------+           +---------------------+
-```
-
-### Step 1: Provision Infrastructure with Terraform
 ```bash
 cd Terraform_ansible/
 terraform init
-terraform plan
 terraform apply -auto-approve
-```
-*Terraform outputs the instance public IPs and creates the private key `terra-key-ec2`.*
-
-### Step 2: Set Secure Permissions on Private Key
-Linux and SSH require strict private key permissions:
-```bash
 chmod 400 terra-key-ec2
-```
-
-### Step 3: Populate Ansible Inventory
-Update [`inventory`](file:///e:/PRATIK/Coding/AWS-DevOps/Ansible/inventory) with the generated EC2 Public IP:
-```ini
-[web]
-web1 ansible_host=34.228.xx.xx
-
-[web:vars]
-ansible_user=ubuntu
-ansible_ssh_private_key_file=./Terraform_ansible/terra-key-ec2
-```
-
-### Step 4: Verify SSH Connectivity via Ad-Hoc Ping
-```bash
 ansible -i inventory web -m ping
 ```
 
-### Step 5: Execute the Deployment Playbook
+---
+
+## 7. Root Level Files & Configurations
+
+| File | Purpose | Key Details |
+| :--- | :--- | :--- |
+| **`ansible.cfg`** | Global Ansible configuration | Sets `host_key_checking = False` (disables interactive SSH host key prompts in automation) and `inventory = ./inventory`. |
+| **`.gitignore`** | Security & repository hygiene | Blocks sensitive files from reaching GitHub: `*.pem`, `terra-key*`, `terraform.tfstate`, and `vault_password.txt`. |
+| **`hosts`** & **`inventory`** | Static baseline inventory files | Baseline INI templates showing host definitions and `[all:vars]`. |
+
+---
+
+## 8. Module-by-Module Deep Dive (TrainWithShubham Mapping)
+
+### Module 01: Basics & Ad-Hoc Commands
+
+An **Ad-Hoc command** is a single CLI command executed without writing a playbook file.
+
+#### Command 1: Ping a Group
 ```bash
-ansible-playbook -i inventory Playbook/deploy_nginx.yml
+ansible -i hosts.ini servers -m ping
+```
+* `ansible`: The CLI utility.
+* `-i hosts.ini`: Path to the inventory file.
+* `servers`: Target host or group name.
+* `-m ping`: Invokes the `ping` module.
+* ⚠️ *Note*: This is **not an ICMP network ping**. It tests SSH connectivity, user credentials, and remote Python interpreter availability, returning `{"ping": "pong"}`.
+
+#### Command 2: Run Arbitrary Linux Commands (`uptime`)
+```bash
+ansible -i hosts.ini servers -a "uptime"
+```
+* `-a "uptime"`: Passes arguments to the default module.
+* 💡 *Default Module Magic*: When `-m` is omitted, Ansible defaults to `-m command`!
+* Therefore, this is identical to: `ansible -i hosts.ini servers -m command -a "uptime"`.
+
+#### `command` vs `shell` Module:
+| Feature | `command` Module (`-m command`) | `shell` Module (`-m shell`) |
+| :--- | :--- | :--- |
+| **Execution** | Directly runs binary via `execve` | Executes command through `/bin/sh -c` |
+| **Pipes & Redirects** | ❌ Not supported (`\|`, `>`, `<`) | ✅ Fully supported |
+| **Environment Variables** | ❌ Does not expand `$VAR` | ✅ Expands `$HOME`, `$PATH` |
+| **Example** | `ansible servers -a "cat /etc/os-release"` | `ansible servers -m shell -a "uptime \| awk '{print \$3}'"` |
+
+---
+
+### Module 02: Variables & System Facts
+
+In Ansible, variables make automation reusable across environments.
+
+#### Playbook Anatomy & Keywords:
+```yaml
+---
+- name: Greet Servers           # 1. Name: Readable description in logs
+  hosts: servers                # 2. Hosts: Target inventory group
+  become: yes                   # 3. Become: Privilege escalation (sudo)
+
+  vars:                         # 4. Vars: Scoped dictionary of variables
+    user_name: Pratik
+
+  tasks:                        # 5. Tasks: Sequential list of actions
+    - name: Print greeting
+      command: echo "Hello {{ user_name }}"
 ```
 
-### Step 6: Verify in Web Browser
-Open `http://<ec2-public-ip>` to view the landing page:
-> *"Welcome to Automated Ubuntu Infrastructure via Ansible!"*
+#### Gathering System Facts:
+Before tasks execute, Ansible runs `TASK [Gathering Facts]` (the `setup` module). It discovers remote server information stored in the `ansible_facts` dictionary:
+* `ansible_facts["distribution"]` $\rightarrow$ `"Ubuntu"`, `"RedHat"`, etc.
+* `ansible_facts["os_family"]` $\rightarrow$ `"Debian"`, `"RedHat"`
+* `ansible_facts["memtotal_mb"]` $\rightarrow$ Total RAM in MB
 
 ---
 
-## 11. DevOps Best Practices & Troubleshooting
+### Module 03: Templates, Handlers & State Management
 
-| Practice / Issue | Recommendation |
+#### What is a Handler?
+A **Handler** is an event-driven task that only runs when another task makes an actual modification (`changed: true`).
+
+```yaml
+tasks:
+  - name: Update Nginx Configuration
+    copy:
+      src: nginx.conf
+      dest: /etc/nginx/nginx.conf
+    notify: Restart Nginx Service      # <-- Only triggers if file changed!
+
+handlers:
+  - name: Restart Nginx Service
+    service:
+      name: nginx
+      state: restarted
+```
+* **Why this matters**: If the configuration file didn't change, Nginx is **not** restarted, avoiding unnecessary service downtime.
+* Handlers execute **once at the very end** of the play, even if 10 tasks notified them!
+
+---
+
+### Module 04: Loops & OS Conditionals
+
+When managing multiple packages or heterogeneous operating systems:
+
+```yaml
+vars:
+  utility_tools: [zip, unzip, jq, wget]
+
+tasks:
+  - name: Install Utilities on Ubuntu
+    apt:
+      name: "{{ item }}"
+      state: present
+    loop: "{{ utility_tools }}"                          # Loop over list
+    when: ansible_facts["distribution"] == "Ubuntu"     # OS Conditional check
+```
+
+---
+
+### Module 05: Enterprise Roles Architecture
+
+A **Role** is the standard, modular way to package tasks, handlers, variables, and templates into clean reusable directories.
+
+```
+roles/docker/
+├── defaults/main.yml    # Lowest priority default variables
+├── vars/main.yml        # Higher priority internal variables
+├── tasks/main.yml       # Primary task execution list
+├── handlers/main.yml    # Service restart handlers
+├── meta/main.yml        # Dependencies and author metadata
+└── templates/           # Jinja2 configuration templates
+```
+
+In your playbook, you simply call the role:
+```yaml
+- name: Setup Docker across Cluster
+  hosts: workers
+  become: yes
+  roles:
+    - docker
+```
+
+---
+
+### Module 06: Ansible Vault Security & Secrets
+
+#### The Problem:
+Never push sensitive passwords or API keys to GitHub in plaintext.
+
+#### The Solution:
+**Ansible Vault** encrypts files and variables using symmetric **AES-256** encryption (`$ANSIBLE_VAULT;1.1;AES256`).
+
+#### Complete Vault Workflow:
+
+```bash
+# 1. Create a password file & lock its permissions (owner read-only)
+echo "my_master_password" > vault_password.txt
+chmod 600 vault_password.txt
+
+# 2. Encrypt an existing YAML file in-place
+ansible-vault encrypt secrets.yaml --vault-password-file vault_password.txt
+
+# 3. View the decrypted contents in terminal WITHOUT decrypting on disk
+ansible-vault view secrets.yaml --vault-password-file vault_password.txt
+
+# 4. Edit the encrypted file in your default editor (auto-re-encrypts on save)
+ansible-vault edit secrets.yaml --vault-password-file vault_password.txt
+
+# 5. Run a playbook that imports the encrypted secrets
+ansible-playbook -i ../hosts.ini show_secrets.yaml --vault-password-file vault_password.txt
+```
+
+> [!CAUTION]
+> **DevOps Security Rule**: Always ensure `vault_password.txt` is listed inside `.gitignore`. The encrypted `secrets.yaml` is safe to commit to GitHub, but the password file must **never** be committed!
+
+---
+
+## 9. Master DevOps Command Cheat-Sheet
+
+| Action / Goal | Command |
 | :--- | :--- |
-| **SSH Host Key Prompts** | Set `host_key_checking = False` in `ansible.cfg` for automated cloud environments. |
-| **Permissions on SSH Keys** | Always run `chmod 400 <private_key>` or `chmod 600 <private_key>`. Open permissions (`0644` or `0777`) cause SSH rejection. |
-| **Vault Key Protection** | Ensure `vault_password.txt` is chmodded to `600` and added to `.gitignore`. |
-| **Privilege Escalation** | Always specify `become: yes` on tasks modifying system files or installing packages. |
-| **Idempotent Tasks** | Prefer native modules (`apt`, `copy`, `service`, `template`) over raw `command` or `shell` modules. |
-| **Dry Run Testing** | Always run `ansible-playbook --check` before applying changes in production. |
-| **Secret Masking** | Use `no_log: true` on production tasks handling credentials. |
-| **Directory Hygiene** | Keep playbooks, roles, inventories, and templates structured cleanly in source control. |
+| **Provision AWS Multi-OS Cluster** | `cd terraform_dynamic_inventory && terraform apply -auto-approve` |
+| **Inspect Inventory Tree** | `ansible-inventory -i inventories/dev/hosts.ini --graph` |
+| **Transfer Bundle to Control Node** | `scp -i terra-key-ansible -r termix/ ubuntu@<CONTROL_IP>:/home/ubuntu/` |
+| **Secure Key Permissions** | `chmod 400 terra-key-ansible` |
+| **Ping All Worker Nodes** | `ansible -i hosts.ini workers -m ping` |
+| **Check System Memory on Workers** | `ansible -i hosts.ini workers -a "free -h"` |
+| **Run Multi-OS Docker Role** | `ansible-playbook -i hosts.ini playbooks/install_docker.yml` |
+| **Encrypt Secret File** | `ansible-vault encrypt secrets.yaml --vault-password-file vault_pass.txt` |
+| **View Encrypted File** | `ansible-vault view secrets.yaml --vault-password-file vault_pass.txt` |
+| **Run Playbook with Vault Secrets** | `ansible-playbook -i hosts.ini playbook.yml --vault-password-file vault_pass.txt` |
+| **Syntax Check Playbook** | `ansible-playbook -i hosts.ini playbook.yml --syntax-check` |
+| **Dry Run (Check Mode)** | `ansible-playbook -i hosts.ini playbook.yml --check` |
 
 ---
+
+## 👨‍💻 Author & Repository Reference
+* **Author / Engineer**: Pratik
+* **Project**: AWS Cloud DevOps & Configuration Management Automation
+* **Curriculum Reference**: [TrainWithShubham/ansible-in-one-shot](https://github.com/TrainWithShubham/ansible-in-one-shot/tree/master/modules)
+* **Workspace Path**: `AWS-DevOps/Ansible`

@@ -19,3 +19,14 @@ Ansible-master-key.pub
 hosts.ini
 Playbook/vault_password.txt
 Playbook/vault_password.txt'
+terraform_dynamic_inventory/terra-key-ansible.pub
+terraform_dynamic_inventory/terra-key-ansible
+terraform_dynamic_inventory/.terraform/providers/registry.terraform.io/hashicorp/aws/6.39.0/windows_amd64/LICENSE.txt
+.gitignore
+terraform_dynamic_inventory/.terraform.lock.hcl
+terraform_dynamic_inventory/.terraform/providers/registry.terraform.io/hashicorp/aws/6.39.0/windows_amd64/terraform-provider-aws_v6.39.0_x5.exe
+terraform_dynamic_inventory/.terraform/providers/registry.terraform.io/hashicorp/local/2.9.1/windows_amd64/LICENSE.txt
+terraform_dynamic_inventory/.terraform/providers/registry.terraform.io/hashicorp/local/2.9.1/windows_amd64/terraform-provider-local_v2.9.1_x5.exe
+terraform_dynamic_inventory/.terraform.tfstate.lock.info
+termix/keys/terra-key-ansible
+terraform_dynamic_inventory/terraform.tfstate.backup
