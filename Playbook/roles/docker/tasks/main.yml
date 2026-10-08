@@ -14,12 +14,11 @@
 
 - name: add users to docker
   user:
-     name: "{{ item }}"
-     comment: pratik patil
-     group: docker
-     append: true
-  # sudo usermod -aG docker ubuntu
-   loop: "{{ docker_user }}"
+    name: "{{ item }}"
+    comment: pratik patil
+    group: docker
+    append: true
+  loop: "{{ docker_user }}"
 
 - name: register docker version
   command: docker --version
@@ -28,4 +27,3 @@
 - name: show docker version
   debug:
     msg: "{{ docker_version.stdout }}"
-
