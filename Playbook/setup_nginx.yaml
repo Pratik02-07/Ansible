@@ -1,0 +1,27 @@
+- name: Setup nginx with custom file
+  hosts: servers
+  become: yes
+
+  tasks:
+    - name: Install Nginx
+      apt:
+        name: nginx
+        state: present
+        update_cache: yes  # Best practice to refresh package links on Ubuntu
+
+    - name: Copy the custom HTML File
+      copy:
+        src: index.html
+        dest: /var/www/html #/index.html  # FIXED: Added the destination filename
+        mode: '0644'  # Recommended: Set correct web read permissions
+
+    - name: Restart Nginx
+      service:
+        name: nginx
+        state: restarted  # FIXED: Swapped 'reloaded' to a clean 'restarted' tracking loop
+
+    - name: Enable Nginx on Boot
+      service:
+        name: nginx
+        state: started     # FIXED: Valid operational runtime state
+        enabled: yes       # FIXED: Correct way to enable service on boot

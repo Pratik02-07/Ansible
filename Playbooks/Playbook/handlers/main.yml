@@ -1,0 +1,7 @@
+#SPDX-License-Identifier: MIT-0
+---
+# handlers file for role/Docker
+- name: restart docker
+  service:
+    name: docker
+    state: restarted
